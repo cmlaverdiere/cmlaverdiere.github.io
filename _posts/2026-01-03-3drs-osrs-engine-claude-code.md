@@ -5,7 +5,25 @@ date: 2026-01-03
 categories: [gamedev, ai]
 ---
 
-Over the Christmas holidays, I set out to explore what it would be like to build a game with Claude Code as my primary development partner. The result: **3DRS**, a first-person 3D engine inspired by Old School RuneScape, built from scratch in C++ with Raylib. In 12 days and 101 commits, we went from a simple grass shader to a feature-rich game with procedural textures, dynamic lighting, a full quest system, and an autonomous AI agent that can test the game without human intervention.
+Over the Christmas holiday, I set out once again to make a toy 3d game engine from scratch using minimal libraries. For background, I'm not a games or graphics programmer, but I did take a course in college covering the rendering pipeline / basic shader programming, etc. I've failed at doing similar things many times in the past, with glfw, mainly because I burn out debugging simple things like ordering of opengl calls before I even get anywhere interesting. BUT, I knew this time was going to be different, as now claude code exists, and I'm a big BIG fan. I decided to keep things osrs themed (shoutout: sailing!) as it's a good fit for simple retro style graphics and llms are trained on its wikis and can easily generate plausible content for it.
+
+The result: **3DRS**, a first-person 3D engine inspired by Old School RuneScape, built from scratch in C++ with Raylib. In 12 days and 101 commits, we went from a simple grass shader to a feature-rich game with procedural textures, dynamic lighting, a full quest system, and an autonomous AI agent that can test the game without human intervention.
+
+Making this game was a fundamentally different experience than I've ever had
+programming before. It felt frictionless, it wasn't frustrating, it was just
+FUN. A day doing graphics programming before might be joyless refactoring of
+opengl calls or class design for hours without seeing a single triangle change.
+I'm sure I'm losing some joy I would have had crafting this by hand and seeing
+the working result, but being able to sit down for a couple hours and bang out
+10+ gameplay features and graphical adjustments was another level of
+satisfying.
+
+I'll note I have tried using llms in the past for similar 3d graphics
+programming, but until opus 4.5 with claude code, nothing really clicked. This
+was the first success.
+
+Below, I have some screenshots and overview of various features implemented in
+the game. Some technical descriptions describing the graphics features are llm-written.
 
 ![Daytime overview of Lumbridge](/assets/3drs/hero.png)
 *Procedural terrain, trees, brick buildings, wooden bridge, and the HUD with minimap and inventory.*
@@ -26,7 +44,9 @@ The final numbers: ~19,000 lines of C++, 20 procedural shaders, 4 map regions (L
 
 ## Procedural Everything
 
-Early on I decided: no image textures. Every visual is generated in fragment shaders. Terrain uses noise-based color variation for grass and sand. Water has multi-octave animated noise with sparkle highlights. Walls (brick, stone, wood) use bump mapping for depth. Fire is animated procedural flames. The sky is a time-of-day gradient. Foliage uses SDF-based leaf shapes with procedural veins. The advantage is infinite variation—no two bricks look the same, grass has subtle color differences, and water never tiles.
+Early on I decided: no image textures or obj models. Every visual is generated in fragment shaders and raylib primitives. Terrain uses noise-based color variation for grass and sand. Water has multi-octave animated noise with sparkle highlights. Walls (brick, stone, wood) use bump mapping for depth. Fire is animated procedural flames. The sky is a time-of-day gradient. Foliage uses SDF-based leaf shapes with procedural veins. The advantage is infinite variation—no two bricks look the same, grass has subtle color differences, and water never tiles.
+
+<TODO CLAUDE describe how we easily generated plausible monster geometry using llms>
 
 ![Autumn foliage with campfire](/assets/3drs/blog_autumn_campfire.png)
 *Autumn mode with procedurally-colored foliage and a crackling campfire.*
@@ -155,10 +175,12 @@ The water shader uses multi-octave simplex noise for waves, animated scrolling p
 
 ## Conclusion
 
-Building 3DRS was an experiment in AI-assisted game development. Claude wasn't just autocompleting code—it was designing systems, writing shaders, creating content (quests, monsters, maps), testing its own work via the validation agent, and migrating data formats.
+Building 3DRS was an experiment in AI-assisted game development. Claude wasn't just autocompleting code—it was designing systems, writing shaders, creating content (quests, monsters, maps), testing its own work via the validation agent, and migrating data formats. Most features were very lightly guided by me, with claude suggesting almost all of the details in plan mode and me confirming or offering minimal adjustment for my own taste.
 
 The validation agent represents something new: AI that can verify its own work visually. When Claude implements a feature and then tests it by running the game and looking at screenshots, we're getting closer to software development with minimal human intervention.
 
 ---
 
 *Screenshots captured via automated parallel headless runs—the same system the validation agent uses.*
+
+disclaimer: this is just a fun fanmade poc-project in the spirit of osrs, I will never monetize this and no copyright infringement intended)
