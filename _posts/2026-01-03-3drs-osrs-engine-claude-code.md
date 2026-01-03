@@ -9,21 +9,11 @@ Over the Christmas holiday, I set out once again to make a toy 3d game engine fr
 
 The result: **3DRS**, a first-person 3D engine inspired by Old School RuneScape, built from scratch in C++ with Raylib. In 12 days and 101 commits, we went from a simple grass shader to a feature-rich game with procedural textures, dynamic lighting, a full quest system, and an autonomous AI agent that can test the game without human intervention.
 
-Making this game was a fundamentally different experience than I've ever had
-programming before. It felt frictionless, it wasn't frustrating, it was just
-FUN. A day doing graphics programming before might be joyless refactoring of
-opengl calls or class design for hours without seeing a single triangle change.
-I'm sure I'm losing some joy I would have had crafting this by hand and seeing
-the working result, but being able to sit down for a couple hours and bang out
-10+ gameplay features and graphical adjustments was another level of
-satisfying.
+Making this game was a fundamentally different experience than I've ever had programming before. It felt frictionless, it wasn't frustrating, it was just FUN. A day doing graphics programming before might be joyless refactoring of opengl calls or class design for hours without seeing a single triangle change. I'm sure I'm losing some joy I would have had crafting this by hand and seeing the working result, but being able to sit down for a couple hours and bang out 10+ gameplay features and graphical adjustments was another level of satisfying.
 
-I'll note I have tried using llms in the past for similar 3d graphics
-programming, but until opus 4.5 with claude code, nothing really clicked. This
-was the first success.
+I'll note I have tried using LLMs in the past for similar 3D graphics programming, but until Opus 4.5 with Claude Code, nothing really clicked. This was the first success.
 
-Below, I have some screenshots and overview of various features implemented in
-the game. Some technical descriptions describing the graphics features are llm-written.
+Below are screenshots and an overview of various features. Some technical descriptions are LLM-written.
 
 ![Daytime overview of Lumbridge](/assets/3drs/hero.png)
 *Procedural terrain, trees, brick buildings, wooden bridge, and the HUD with minimap and inventory.*
@@ -46,7 +36,7 @@ The final numbers: ~19,000 lines of C++, 20 procedural shaders, 4 map regions (L
 
 Early on I decided: no image textures or obj models. Every visual is generated in fragment shaders and raylib primitives. Terrain uses noise-based color variation for grass and sand. Water has multi-octave animated noise with sparkle highlights. Walls (brick, stone, wood) use bump mapping for depth. Fire is animated procedural flames. The sky is a time-of-day gradient. Foliage uses SDF-based leaf shapes with procedural veins. The advantage is infinite variation—no two bricks look the same, grass has subtle color differences, and water never tiles.
 
-<TODO CLAUDE describe how we easily generated plausible monster geometry using llms>
+The monster generator takes this further—type a description like "a fire imp with wings" and Claude returns a full monster definition: stats (level, health, damage) plus visual geometry as primitives (cubes, spheres, cylinders) with positions, sizes, and colors. The game parses this and renders the creature. There's also a material system (scales, stone, fur, stripes, spots) for procedural texturing. The egg hatches and your custom monster spawns into the world.
 
 ![Autumn foliage with campfire](/assets/3drs/blog_autumn_campfire.png)
 *Autumn mode with procedurally-colored foliage and a crackling campfire.*
@@ -183,4 +173,6 @@ The validation agent represents something new: AI that can verify its own work v
 
 *Screenshots captured via automated parallel headless runs—the same system the validation agent uses.*
 
-disclaimer: this is just a fun fanmade poc-project in the spirit of osrs, I will never monetize this and no copyright infringement intended)
+---
+
+*Disclaimer: This is a fan-made proof-of-concept project in the spirit of OSRS. I will never monetize this and no copyright infringement is intended.*
