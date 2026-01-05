@@ -49,9 +49,6 @@ Terrain uses noise-based color variation for grass and sand. Water has multi-oct
 ![Autumn foliage with campfire](/assets/3drs/blog_autumn_campfire.png)
 *Autumn mode with procedurally-colored foliage and a crackling campfire.*
 
-![Water bridge scene](/assets/3drs/blog_water_bridge_20260103_164250.png)
-*Animated water with procedural ripples, crossed by a wooden bridge.*
-
 ![Trees and grass with campfire](/assets/3drs/blog_features_grass_trees_20260103_164315.png)
 *Procedural trees, grass blades swaying in the wind, and animated fire.*
 
