@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Building an OSRS-Inspired 3D Engine with Claude Code Over Christmas Break"
+title: "Building an OSRS-Inspired 3D Engine with Claude Code"
 date: 2026-01-03
 categories: [gamedev, ai]
 ---
@@ -13,7 +13,9 @@ Making this game was a fundamentally different experience than I've ever had pro
 
 I'll note I have tried using LLMs in the past for similar 3D graphics programming (o1-preview back in the day), but until Opus 4.5 with Claude Code, nothing really clicked. This was the first success.
 
-Below are screenshots and an overview of various features. Some technical descriptions are LLM-written. Code is available at [github.com/cmlaverdiere/3drs](https://github.com/cmlaverdiere/3drs).
+Below are screenshots and an overview of various features. Some technical descriptions are LLM-written.
+
+Code is available at [github.com/cmlaverdiere/3drs](https://github.com/cmlaverdiere/3drs).
 
 ![Daytime overview of Lumbridge](/assets/3drs/hero.png)
 *Procedural terrain, trees, brick buildings, wooden bridge, and the HUD with minimap and inventory.*
@@ -32,16 +34,28 @@ The final numbers: ~19,000 lines of C++, 20 procedural shaders, 4 map regions (L
 
 **Days 5-12** focused on refinement: LLM-powered monster generation, the scripted input system for automated testing, the validation subagent, procedural tree and brick shaders with bump mapping, and instanced grass rendering.
 
-## Procedural Everything
+---
 
-Early on I decided: no image textures or obj models. Every visual is generated in fragment shaders and raylib primitives. Terrain uses noise-based color variation for grass and sand. Water has multi-octave animated noise with sparkle highlights. Walls (brick, stone, wood) use bump mapping for depth. Fire is animated procedural flames. The sky is a time-of-day gradient. Foliage uses SDF-based leaf shapes with procedural veins. The advantage is infinite variation - no two bricks look the same, grass has subtle color differences, and water never tiles.
+## Graphics
 
-The monster generator takes this further - type a description like "a fire imp with wings" and Claude returns a full monster definition: stats (level, health, damage) plus visual geometry as primitives (cubes, spheres, cylinders) with positions, sizes, and colors. The game parses this and renders the creature. There's also a material system (scales, stone, fur, stripes, spots) for procedural texturing. The egg hatches and your custom monster spawns into the world.
+*[Skip to AI-powered features and takeaways](#ai-features)*
+
+Early on I decided: no image textures or obj models. Every visual is generated in fragment shaders and raylib primitives.
+
+### Procedural Textures
+
+Terrain uses noise-based color variation for grass and sand. Water has multi-octave animated noise with sparkle highlights. Walls (brick, stone, wood) use bump mapping for depth. Fire is animated procedural flames. The sky is a time-of-day gradient. Foliage uses SDF-based leaf shapes with procedural veins. The advantage is infinite variation - no two bricks look the same, grass has subtle color differences, and water never tiles.
 
 ![Autumn foliage with campfire](/assets/3drs/blog_autumn_campfire.png)
 *Autumn mode with procedurally-colored foliage and a crackling campfire.*
 
-## Lighting and Seasons
+![Water bridge scene](/assets/3drs/blog_water_bridge_20260103_164250.png)
+*Animated water with procedural ripples, crossed by a wooden bridge.*
+
+![Trees and grass with campfire](/assets/3drs/blog_features_grass_trees_20260103_164315.png)
+*Procedural trees, grass blades swaying in the wind, and animated fire.*
+
+### Lighting and Seasons
 
 ![Night scene with point lights from street lamps](/assets/3drs/blog_night_lamps_20260103_164245.png)
 *Street lamps turn on automatically at dusk.*
@@ -53,7 +67,20 @@ The lighting system simulates a 20-minute day/night cycle. Directional sunlight 
 
 Seasons affect terrain shaders (snow in winter, vibrant greens in spring), tree colors (green in summer, orange/red in autumn, evergreen in winter), and particle systems (snow in winter, falling leaves in autumn).
 
-## The Quest System
+![Al Kharid desert region](/assets/3drs/blog_alkharid_desert_20260103_164316.png)
+*Al Kharid: sand terrain, brick walls, scorpion enemies.*
+
+### Rendering Pipeline
+
+The rendering pipeline is multi-pass: shadow pass (depth-only to 2048x2048 shadow map), main pass (scene with lighting to off-screen texture), post-processing (bloom extraction/blur, SSAO), and composite (combine everything to screen).
+
+Performance relies on frustum culling (Gribb/Hartmann plane extraction with sphere tests), spatial hashing (O(1) proximity queries), instanced rendering (19,600 grass blades in one draw call), and chunk streaming (grass loaded around player position).
+
+---
+
+## AI-Powered Features {#ai-features}
+
+### The Quest System
 
 Quests are data-driven text files with their own DSL. No C++ code needed to add new quests:
 
@@ -97,9 +124,27 @@ The DSL handles multi-stage quests with state-aware dialogue. Each objective has
 ![Quest completion](/assets/3drs/quest_complete.png)
 *Quest dialogue updates as you progress.*
 
-## The Autonomous Validation Agent
+### LLM Monster Generation
 
-This is where things got interesting. I created a validation subagent - a specialized Claude Code agent that can test game features without human intervention. It has access to a scripted input system that simulates keypresses, mouse clicks, and player teleportation. It can take screenshots and analyze them with vision.
+One of the more fun features: press `G`, type something like "a forest spirit with glowing eyes" or "small goblin with a club," and an egg spawns at your feet. It wobbles while an async API call fires off to Claude. A few seconds later, the egg hatches and out pops your custom creature - stats, colors, geometry, and all.
+
+![A generated Forest Fury monster](/assets/3drs/monster_generated.png)
+*A "Forest Fury" generated from a text description, built from cubes and spheres with a fur material.*
+
+Claude returns a structured definition that the game parses: level, health, damage, aggression, colors, a material type (scales, stone, fur, stripes), and geometry as primitives (cubes, spheres, cylinders with positions and sizes). The monsters persist to disk, so you can spawn more of them later from a menu. The whole flow is non-blocking - keep playing while the egg wobbles in the background.
+
+### Voice and LLM Help
+
+NPC dialogue is spoken aloud using Piper TTS, a local neural text-to-speech engine. Each NPC type gets a voice (deep male for guards, neutral for friendly NPCs). The models run locally (~60MB each), synthesizing in real-time without API calls.
+
+Pressing `H` opens a help dialog where you can ask Claude questions about your current quest. The system prevents spoilers - it only sends Claude info about objectives you've completed or are currently working on, never future ones. The prompt includes strict rules: only help with current objectives, don't reveal future objectives or rewards, keep responses to 2-3 sentences, stay in-character. The API call runs on a background thread so the game doesn't freeze.
+
+![LLM quest help](/assets/3drs/llm_help.png)
+*Claude provides context-aware hints without spoiling future objectives.*
+
+### The Autonomous Validation Agent
+
+This is where things got interesting. I created a validation subagent - a specialized Claude Code agent that can test game features without my intervention. It has access to a scripted input system that simulates keypresses, mouse clicks, and player teleportation. It can take screenshots and analyze them with vision.
 
 When I implement a feature, I invoke the agent with a description like "Verify the Random button in the time menu changes the lighting." The agent reads the source files, generates a test script, runs the game headless, captures screenshots, analyzes them, and returns a PASS/FAIL report.
 
@@ -116,11 +161,11 @@ set_season <season>           # change season
 screenshot <label>            # capture screenshot
 ```
 
-Traditional game testing requires a human to launch the game, navigate to the feature, perform actions, visually verify, and report. The validation agent automates this entire loop. When it implements a feature, it can verify it works without human involvement. For features that need real-time feel (combat timing, audio sync), it falls back to `MANUAL_TEST_REQUIRED` with instructions.
+Traditional game testing requires a human to launch the game, navigate to the feature, perform actions, visually verify, and report. The validation agent automates this entire loop. When it implements a feature, it can verify it works without my involvement. For features that need real-time feel (combat timing, audio sync), it falls back to `MANUAL_TEST_REQUIRED` with instructions.
 
 Because headless mode doesn't need a display, you can run multiple instances in parallel. The screenshots for this blog post were captured by spawning 6 game instances simultaneously, each with a different script (daytime, winter, autumn, night, water, dawn), all rendering and saving screenshots at once.
 
-## The Map System
+### The Map System
 
 Maps use a text format with include directives:
 
@@ -132,44 +177,9 @@ include alkharid.map 100 50
 
 Each region file has entity placements: `wall`, `tree`, `npc`, `enemy`, `water`. This made world-building collaborative - Claude could add content and immediately test with `./build/game --test`, which validates loading without opening a window.
 
-![Al Kharid desert region](/assets/3drs/blog_alkharid_desert_20260103_164316.png)
-*Al Kharid: sand terrain, brick walls, scorpion enemies.*
-
-## Technical Notes
-
-The rendering pipeline is multi-pass: shadow pass (depth-only to 2048x2048 shadow map), main pass (scene with lighting to off-screen texture), post-processing (bloom extraction/blur, SSAO), and composite (combine everything to screen).
-
-Performance relies on frustum culling (Gribb/Hartmann plane extraction with sphere tests), spatial hashing (O(1) proximity queries), instanced rendering (19,600 grass blades in one draw call), and chunk streaming (grass loaded around player position).
-
 Player progress saves to JSON with automatic migration. When I changed quest progress from index-based to ID-based, Claude wrote a migration script to convert existing saves.
 
-## LLM Monster Generation
-
-One of the more fun features: press `G`, type something like "a forest spirit with glowing eyes" or "small goblin with a club," and an egg spawns at your feet. It wobbles while an async API call fires off to Claude. A few seconds later, the egg hatches and out pops your custom creature - stats, colors, geometry, and all.
-
-![A generated Forest Fury monster](/assets/3drs/monster_generated.png)
-*A "Forest Fury" generated from a text description, built from cubes and spheres with a fur material.*
-
-Claude returns a structured definition that the game parses: level, health, damage, aggression, colors, a material type (scales, stone, fur, stripes), and geometry as primitives (cubes, spheres, cylinders with positions and sizes). The monsters persist to disk, so you can spawn more of them later from a menu. The whole flow is non-blocking - keep playing while the egg wobbles in the background.
-
-## Voice and LLM Help
-
-NPC dialogue is spoken aloud using Piper TTS, a local neural text-to-speech engine. Each NPC type gets a voice (deep male for guards, neutral for friendly NPCs). The models run locally (~60MB each), synthesizing in real-time without API calls.
-
-Pressing `H` opens a help dialog where you can ask Claude questions about your current quest. The system prevents spoilers - it only sends Claude info about objectives you've completed or are currently working on, never future ones. The prompt includes strict rules: only help with current objectives, don't reveal future objectives or rewards, keep responses to 2-3 sentences, stay in-character. The API call runs on a background thread so the game doesn't freeze.
-
-![LLM quest help](/assets/3drs/llm_help.png)
-*Claude provides context-aware hints without spoiling future objectives.*
-
-## Water and Environment
-
-![Water bridge scene](/assets/3drs/blog_water_bridge_20260103_164250.png)
-*Animated water with procedural ripples, crossed by a wooden bridge.*
-
-The water shader uses multi-octave simplex noise for waves, animated scrolling patterns, sparkle highlights that catch sunlight, and color variation based on depth.
-
-![Trees and grass with campfire](/assets/3drs/blog_features_grass_trees_20260103_164315.png)
-*Procedural trees, grass blades swaying in the wind, and animated fire.*
+---
 
 ## Weaknesses and Pitfalls
 
@@ -207,8 +217,4 @@ part 2 will be in the works!
 
 ---
 
-*Screenshots captured via automated parallel headless runs - the same system the validation agent uses.*
-
----
-
-*Disclaimer: This is a fan-made proof-of-concept project in the spirit of OSRS. I will never monetize this and no copyright infringement is intended.*
+*Disclaimer: This is a fan-made proof-of-concept project in the spirit of OSRS. I will never monetize this and no copyright infringement is intended. Also I am sure the code is full of vibe-coded bugs, please don't reference them for anything serious.*
